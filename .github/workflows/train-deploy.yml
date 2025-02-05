@@ -1,0 +1,39 @@
+name: Train & Deploy ML Model
+
+on: 
+  push:
+    branches:
+      - main
+
+jobs:
+  train-model:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Train model
+        run: python ml_pipeline.py
+
+      - name: Commit and push model
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add model.pkl
+          git commit -m "Auto-retrained model"
+          git push origin main
+
+  deploy:
+    needs: train-model
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deployment
+        run: curl -X POST https://api.render.com/deploy/srv-xxxxxxxxxx
